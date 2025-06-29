@@ -26,7 +26,15 @@ INCLUDES = \
   -IProject/00_Demo/Core/Inc \
   -IProject/00_Demo/Drivers \
   -IProject/00_Demo/Middlewares \
-  -IProject/00_Demo
+  -IProject/00_Demo \
+  -IProject/00_Demo/Drivers/CMSIS/Include \
+  -IProject/00_Demo/Drivers/CMSIS/Device/ST/STM32F4xx/Include \
+  -IProject/00_Demo/STM32F4xx_HAL_Driver/Inc \
+  -IProject/00_Demo/STM32F4xx_HAL_Driver/Inc/Legacy \
+  -IProject/00_Demo/Middlewares/Third_Party/FreeRTOS/Source/include \
+  -IProject/00_Demo/Middlewares/Third_Party/FreeRTOS/Source/include \
+  -IProject/00_Demo/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2\
+  -IProject/00_Demo/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
 
 # === Source Files (auto-detect) ===
 C_SRCS   = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))
