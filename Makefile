@@ -5,20 +5,20 @@ MCU = cortex-m4
 # === Toolchain ===
 CC      = arm-none-eabi-gcc
 CXX     = arm-none-eabi-g++
-AS      = arm-none-eabi-as
-LD      = arm-none-eabi-g++
 OBJCOPY = arm-none-eabi-objcopy
 SIZE    = arm-none-eabi-size
 
 # === Directories ===
 BUILD_DIR = build
-SRC_DIRS = Core/Src Drivers/STM32F4xx_HAL_Driver/Src FreeRTOS/Source Src
+SRC_DIRS = Core/Src Src Drivers/STM32F4xx_HAL_Driver/Src FreeRTOS/Source
+
+# === Linker Script === ✅ ADD YOUR SCRIPT HERE
+LDSCRIPT = STM32F446RETX_FLASH.ld
 
 # === Flags ===
 CFLAGS   = -mcpu=$(MCU) -mthumb -Wall -O2 -ffunction-sections -fdata-sections
 CXXFLAGS = $(CFLAGS) -std=c++17
-ASFLAGS  = -mcpu=$(MCU) -mthumb
-LDFLAGS  = -TSTM32F446RE_FLASH.ld -Wl,--gc-sections
+LDFLAGS  = -T$(LDSCRIPT) -Wl,--gc-sections
 
 # === Include Paths ===
 INCLUDES = \
@@ -44,16 +44,16 @@ $(TARGET).elf: $(OBJS)
 	@$(CXX) $(CXXFLAGS) $(OBJS) -o $@ $(LDFLAGS)
 	@$(SIZE) $@
 
-# C source file compilation
+# Compile C source
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	@echo "[CC] Compiling $<"
+	@echo "[CC] $<"
 	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-# C++ source file compilation
+# Compile C++ source
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
-	@echo "[C++] Compiling $<"
+	@echo "[C++] $<"
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
