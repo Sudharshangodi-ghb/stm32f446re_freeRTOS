@@ -10,10 +10,11 @@ BUILD_DIR := build
 # Toolchain Configuration
 ######################################
 
-CC := arm-none-eabi-gcc
-AS := arm-none-eabi-as
-CP := arm-none-eabi-objcopy
-SZ := arm-none-eabi-size
+TOOLCHAIN_PATH := C:/ST/STM32CubeIDE_1.18.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344/tools/bin
+CC := $(TOOLCHAIN_PATH)/arm-none-eabi-gcc
+AS := $(TOOLCHAIN_PATH)/arm-none-eabi-as
+CP := $(TOOLCHAIN_PATH)/arm-none-eabi-objcopy
+SZ := $(TOOLCHAIN_PATH)/arm-none-eabi-size
 
 CFLAGS := -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -Wall -fdata-sections -ffunction-sections -g -O0
@@ -24,39 +25,14 @@ LDFLAGS := -TSTM32F446RETx_FLASH.ld -Wl,-Map=$(BUILD_DIR)/$(PROJECT_NAME).map -W
 ASFLAGS := -mcpu=cortex-m4 -mthumb
 
 ######################################
-# Source and Include Directories
+# Source and Include Auto Detection
 ######################################
 
-C_SOURCES :=  \
-Core/Src/main.c \
-Core/Src/stm32f4xx_it.c \
-Core/Src/system_stm32f4xx.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
-Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
-Middlewares/Third_Party/FreeRTOS/Source/event_groups.c \
-Middlewares/Third_Party/FreeRTOS/Source/list.c \
-Middlewares/Third_Party/FreeRTOS/Source/queue.c \
-Middlewares/Third_Party/FreeRTOS/Source/tasks.c \
-Middlewares/Third_Party/FreeRTOS/Source/timers.c \
-Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
-Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
+C_SOURCES := $(shell find Core Drivers Middlewares -name *.c)
+ASM_SOURCES := $(shell find Core Drivers -name *.s)
 
-ASM_SOURCES := startup_stm32f446xx.s
-
-INCLUDES :=  \
--ICore/Inc \
--IDrivers/CMSIS/Include \
--IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
--IDrivers/STM32F4xx_HAL_Driver/Inc \
--IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--IMiddlewares/Third_Party/FreeRTOS/Source/include \
--IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
+INCLUDES := $(shell find Core Drivers Middlewares -type d)
+INCLUDES := $(addprefix -I, $(INCLUDES))
 
 ######################################
 # Build Rules
