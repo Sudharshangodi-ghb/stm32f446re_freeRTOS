@@ -1,64 +1,87 @@
-# === Project Settings ===
-TARGET = firmware
-MCU = cortex-m4
-LDSCRIPT = 00_Demo/STM32F446RETX_FLASH.ld
 
-# === Toolchain ===
-CC = "C:\ST\STM32CubeIDE_1.18.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344\tools\bin\arm-none-eabi-gcc"
-CXX = "C:\ST\STM32CubeIDE_1.18.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344\tools\bin\arm-none-eabi-g++.exe"
-OBJCOPY = "C:\ST\STM32CubeIDE_1.18.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344\tools\bin\arm-none-eabi-objcopy.exe"
-SIZE = "C:\ST\STM32CubeIDE_1.18.1\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344\tools\bin\arm-none-eabi-size.exe"
+######################################
+# Project Configuration
+######################################
 
-# === Directories ===
-BUILD_DIR = build
-SRC_DIRS = \
-  Project/00_Demo/Core/Src \
-  Project/00_Demo/Drivers \
-  Project/00_Demo/Middlewares
+PROJECT_NAME := stm32f446re_freertos
+BUILD_DIR := build
 
-# === Compiler Flags ===
-CFLAGS   = -mcpu=$(MCU) -mthumb -Wall -O2 -ffunction-sections -fdata-sections
-CXXFLAGS = $(CFLAGS) -std=c++17
-LDFLAGS  = -T$(LDSCRIPT) -Wl,--gc-sections
+######################################
+# Toolchain Configuration
+######################################
 
-# === Include Paths ===
-INCLUDES = $(foreach dir, $(SRC_DIRS), -I$(dir))
+CC := arm-none-eabi-gcc
+AS := arm-none-eabi-as
+CP := arm-none-eabi-objcopy
+SZ := arm-none-eabi-size
 
-# === Source Files (auto-detect) ===
-C_SRCS   = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))
-CPP_SRCS = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.cpp))
-# Add assembler (.s) files
-S_SRCS = $(shell find $(SRC_ROOT) -name 'startup_stm32f446xx.s')
-OBJS += $(patsubst %.s, $(BUILD_DIR)/%.o, $(S_SRCS))
-OBJS     = $(patsubst %.c, $(BUILD_DIR)/%.o, $(C_SRCS)) \
-           $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(CPP_SRCS))
+CFLAGS := -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
+CFLAGS += -Wall -fdata-sections -ffunction-sections -g -O0
+CFLAGS += -DSTM32F446xx -DUSE_HAL_DRIVER
 
-# === Rules ===
-all: $(TARGET).elf
+LDFLAGS := -TSTM32F446RETx_FLASH.ld -Wl,-Map=$(BUILD_DIR)/$(PROJECT_NAME).map -Wl,--gc-sections
 
-$(TARGET).elf: $(OBJS)
-	@echo "[LD] Linking $@"
-	@$(CXX) $(CXXFLAGS) $(OBJS) -o $@ $(LDFLAGS)
-	@$(SIZE) $@
+ASFLAGS := -mcpu=cortex-m4 -mthumb
+
+######################################
+# Source and Include Directories
+######################################
+
+C_SOURCES :=  \
+Core/Src/main.c \
+Core/Src/stm32f4xx_it.c \
+Core/Src/system_stm32f4xx.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
+Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
+Middlewares/Third_Party/FreeRTOS/Source/event_groups.c \
+Middlewares/Third_Party/FreeRTOS/Source/list.c \
+Middlewares/Third_Party/FreeRTOS/Source/queue.c \
+Middlewares/Third_Party/FreeRTOS/Source/tasks.c \
+Middlewares/Third_Party/FreeRTOS/Source/timers.c \
+Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
+Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
+
+ASM_SOURCES := startup_stm32f446xx.s
+
+INCLUDES :=  \
+-ICore/Inc \
+-IDrivers/CMSIS/Include \
+-IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
+-IDrivers/STM32F4xx_HAL_Driver/Inc \
+-IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
+-IMiddlewares/Third_Party/FreeRTOS/Source/include \
+-IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
+
+######################################
+# Build Rules
+######################################
+
+OBJS := $(addprefix $(BUILD_DIR)/, $(C_SOURCES:.c=.o))
+AS_OBJS := $(addprefix $(BUILD_DIR)/, $(ASM_SOURCES:.s=.o))
+
+all: $(BUILD_DIR)/$(PROJECT_NAME).elf
 
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	@echo "[CC] $<"
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(BUILD_DIR)/%.o: %.cpp
-	@mkdir -p $(dir $@)
-	@echo "[C++] $<"
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-	
 $(BUILD_DIR)/%.o: %.s
 	@mkdir -p $(dir $@)
-	@echo "[ASM] $<"
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CC) $(ASFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/$(PROJECT_NAME).elf: $(OBJS) $(AS_OBJS)
+	$(CC) $(CFLAGS) $(OBJS) $(AS_OBJS) -o $@ $(LDFLAGS)
+	$(CP) -O ihex $@ $(BUILD_DIR)/$(PROJECT_NAME).hex
+	$(CP) -O binary $@ $(BUILD_DIR)/$(PROJECT_NAME).bin
+	$(SZ) $@
 
 clean:
-	@rm -rf $(BUILD_DIR) *.elf *.hex *.bin
+	rm -rf $(BUILD_DIR)
 
-flash: $(TARGET).elf
-	st-flash write $(TARGET).elf 0x8000000
+.PHONY: all clean
