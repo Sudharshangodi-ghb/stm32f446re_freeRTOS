@@ -1,20 +1,24 @@
-name: Build STM32F446 FreeRTOS
+name: Build STM32F446 FreeRTOS Project
 
 on:
   push:
     branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
     - name: Install ARM Toolchain
       run: |
         sudo apt update
-        sudo apt install gcc-arm-none-eabi make
+        sudo apt install -y gcc-arm-none-eabi make
 
-    - name: Build with Makefile
-      run: make
+    - name: Build Firmware
+      run: |
+        make
